@@ -11,7 +11,7 @@ export const Experience = () => {
     <>
       <OrbitControls 
         ref={orbitRef}
-        target={[0, 10, 0]}
+        target={[20.42, -90.13, -14.11]}
         enablePan={true}
         enableZoom={true}
         enableRotate={true}
@@ -19,7 +19,7 @@ export const Experience = () => {
       <axesHelper args={[10]} />
 
       {/* Camera HUD overlay (screen-space) */}
-      <CameraHUD />
+      <CameraHUD orbitRef={orbitRef} />
       
       {/* Axis labels */}
       <Text position={[12, 0, 0]} fontSize={3} color="red" anchorX="center" anchorY="middle">X</Text>

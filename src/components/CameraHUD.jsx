@@ -3,7 +3,7 @@ import { Html } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
-export default function CameraHUD() {
+export default function CameraHUD({ orbitRef }) {
   const { camera } = useThree();
   const [info, setInfo] = useState({
     pos: { x: 0, y: 0, z: 0 },
@@ -12,10 +12,16 @@ export default function CameraHUD() {
     near: 0.1,
     far: 1000,
     distance: 0,
+    target: { x: 0, y: 0, z: 0 },
+    offset: { x: 0, y: 0, z: 0 },
   });
 
   useFrame(() => {
-    const target = new THREE.Vector3(0, 10, 0);
+    // Prefer OrbitControls target if available, fallback to [0,10,0]
+    const target = orbitRef?.current?.target
+      ? orbitRef.current.target
+      : new THREE.Vector3(0, 10, 0);
+    const offsetVec = new THREE.Vector3().copy(camera.position).sub(target);
     setInfo({
       pos: {
         x: camera.position.x,
@@ -31,6 +37,8 @@ export default function CameraHUD() {
       near: camera.near,
       far: camera.far,
       distance: camera.position.distanceTo(target),
+      target: { x: target.x, y: target.y, z: target.z },
+      offset: { x: offsetVec.x, y: offsetVec.y, z: offsetVec.z },
     });
   });
 
@@ -49,6 +57,12 @@ export default function CameraHUD() {
         <div className="camera-hud__line">FOV: {info.fov.toFixed(1)}°</div>
         <div className="camera-hud__line">Near/Far: {info.near.toFixed(3)} / {info.far.toFixed(1)}</div>
         <div className="camera-hud__line">Distance: {info.distance.toFixed(2)}</div>
+        <div className="camera-hud__line">
+          Target (Pan): {info.target.x.toFixed(2)}, {info.target.y.toFixed(2)}, {info.target.z.toFixed(2)}
+        </div>
+        <div className="camera-hud__line">
+          Offset: {info.offset.x.toFixed(2)}, {info.offset.y.toFixed(2)}, {info.offset.z.toFixed(2)}
+        </div>
       </div>
     </Html>
   );

@@ -5,9 +5,9 @@ function App() {
   return (
     <Canvas
       shadows
-      camera={{ position: [24.16, -38.08, 236.61], fov: 75, near: 0.1, far: 1000 }}
+      camera={{ position: [7.12, -75.11, 213.04], fov: 75, near: 0.1, far: 1000 }}
       onCreated={({ camera }) => {
-        camera.lookAt(0, 10, 0);
+        camera.lookAt(20.42, -90.13, -14.11);
       }}
     >
       <color attach="background" args={["#ececec"]} />
