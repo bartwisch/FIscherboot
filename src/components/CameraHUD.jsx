@@ -1,10 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { Html } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import { useHotkeys } from "react-hotkeys-hook";
+
+// Toggle button component
+const ToggleButton = ({ isOpen, onClick }) => (
+  <button 
+    onClick={onClick}
+    className="toggle-button"
+    aria-label={isOpen ? 'Hide camera info' : 'Show camera info'}
+  >
+    {isOpen ? '▲' : '▼'} Camera
+  </button>
+);
 
 export default function CameraHUD({ orbitRef }) {
   const { camera } = useThree();
+  const [isOpen, setIsOpen] = useState(false);
   const [info, setInfo] = useState({
     pos: { x: 0, y: 0, z: 0 },
     rot: { x: 0, y: 0, z: 0 },
@@ -42,27 +55,39 @@ export default function CameraHUD({ orbitRef }) {
     });
   });
 
+  const toggleOpen = useCallback(() => {
+    setIsOpen(prev => !prev);
+  }, []);
+
+  // Add hotkey (Ctrl+Alt+C) to toggle camera info
+  useHotkeys('ctrl+alt+c', toggleOpen, [toggleOpen]);
+
   return (
-    <Html prepend style={{ pointerEvents: "none" }}>
-      <div className="camera-hud">
-        <div className="camera-hud__title">Camera</div>
-        <div className="camera-hud__line">
-          Pos: {info.pos.x.toFixed(2)}, {info.pos.y.toFixed(2)}, {info.pos.z.toFixed(2)}
-        </div>
-        <div className="camera-hud__line">
-          Rot: {(info.rot.x * 180 / Math.PI).toFixed(1)}°,
-          {(info.rot.y * 180 / Math.PI).toFixed(1)}°,
-          {(info.rot.z * 180 / Math.PI).toFixed(1)}°
-        </div>
-        <div className="camera-hud__line">FOV: {info.fov.toFixed(1)}°</div>
-        <div className="camera-hud__line">Near/Far: {info.near.toFixed(3)} / {info.far.toFixed(1)}</div>
-        <div className="camera-hud__line">Distance: {info.distance.toFixed(2)}</div>
-        <div className="camera-hud__line">
-          Target (Pan): {info.target.x.toFixed(2)}, {info.target.y.toFixed(2)}, {info.target.z.toFixed(2)}
-        </div>
-        <div className="camera-hud__line">
-          Offset: {info.offset.x.toFixed(2)}, {info.offset.y.toFixed(2)}, {info.offset.z.toFixed(2)}
-        </div>
+    <Html prepend>
+      <div className={`camera-hud ${isOpen ? 'open' : ''}`}>
+        <ToggleButton isOpen={isOpen} onClick={toggleOpen} />
+        {isOpen && (
+          <div className="camera-hud__content">
+            <div className="camera-hud__title">Camera Info</div>
+            <div className="camera-hud__line">
+              Pos: {info.pos.x.toFixed(2)}, {info.pos.y.toFixed(2)}, {info.pos.z.toFixed(2)}
+            </div>
+            <div className="camera-hud__line">
+              Rot: {(info.rot.x * 180 / Math.PI).toFixed(1)}°,
+              {(info.rot.y * 180 / Math.PI).toFixed(1)}°,
+              {(info.rot.z * 180 / Math.PI).toFixed(1)}°
+            </div>
+            <div className="camera-hud__line">FOV: {info.fov.toFixed(1)}°</div>
+            <div className="camera-hud__line">Near/Far: {info.near.toFixed(3)} / {info.far.toFixed(1)}</div>
+            <div className="camera-hud__line">Distance: {info.distance.toFixed(2)}</div>
+            <div className="camera-hud__line">
+              Target: {info.target.x.toFixed(2)}, {info.target.y.toFixed(2)}, {info.target.z.toFixed(2)}
+            </div>
+            <div className="camera-hud__line">
+              Offset: {info.offset.x.toFixed(2)}, {info.offset.y.toFixed(2)}, {info.offset.z.toFixed(2)}
+            </div>
+          </div>
+        )}
       </div>
     </Html>
   );
