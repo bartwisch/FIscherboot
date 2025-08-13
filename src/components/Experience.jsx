@@ -2,10 +2,10 @@ import { Gltf, OrbitControls, Text } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import { useRef } from "react";
 import CameraHUD from "./CameraHUD";
-import FishSpawner, { FishSpawnerPresets } from "./FishSpawner";
+import FishSpawner from "./FishSpawner";
 
 export const Experience = () => {
-  const { camera } = useThree();
+  const { camera, viewport } = useThree();
   const orbitRef = useRef();
   
   return (
@@ -45,9 +45,11 @@ export const Experience = () => {
       <Gltf src="/models/underwater_skybox.glb" />
       <Gltf src="/models/boat1.glb" position={[0, 10, 0]} scale={0.1} castShadow receiveShadow />
       <FishSpawner 
-        {...FishSpawnerPresets.normal}
-        spawnArea={{ x: 20, z: 0 }}
-        screenWidth={400}
+        fishCount={5}
+        baseSpeed={10}
+        altitudeRange={{ min: -150, max: -30 }} // Deep underwater
+        spawnArea={{ x: 0, z: 0 }} // Centered spawn area
+        screenWidth={viewport.width} // Use full screen width
       />
       <Gltf src="/models/lure1.glb" position={[0, 5, 0]} scale={10} rotation={[0, 0, -Math.PI/2]} castShadow receiveShadow />
     </>

@@ -3,7 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { Gltf } from "@react-three/drei";
 import * as THREE from "three";
 
-export default function Fish({ speed = 3, screenWidth = 400, ...props }) {
+export default function Fish({ speed = 3, screenWidth = 40, spawnDelay = 0, ...props }) {
   const fishRef = useRef();
   // Store the starting position to maintain altitude
   const startPosition = useMemo(() => ({
@@ -12,23 +12,36 @@ export default function Fish({ speed = 3, screenWidth = 400, ...props }) {
     z: props.position?.[2] || 0
   }), [props.position]);
 
-  useFrame(({ clock }) => {
+    useFrame(({ clock }) => {
     if (!fishRef.current) return;
+
+    const elapsedTime = clock.getElapsedTime();
+
+    // Wait for the spawn delay before starting the animation
+    if (elapsedTime < spawnDelay) {
+      fishRef.current.visible = false; // Keep fish hidden until it's time to spawn
+      return;
+    }
+    fishRef.current.visible = true;
+
+    // The effective time for animation, starting from zero after the delay
+    const animationTime = elapsedTime - spawnDelay;
+
+    // Define the total travel distance, including an off-screen buffer
+    const travelDistance = screenWidth + 50; // 50 is a buffer to ensure it's fully off-screen
     
-    // Calculate continuous left movement (right to left)
-    const time = clock.getElapsedTime();
-    const rightEdge = startPosition.x + screenWidth / 2;
-    const leftEdge = startPosition.x - screenWidth / 2;
-    
-    // Move from right to left, reset when off-screen
-    const currentX = rightEdge - (time * speed * 10) % (screenWidth + 50);
-    
-    // Update position - maintain original y (altitude) and z (depth)
+    // Start position is just off-screen to the right
+    const startX = screenWidth / 2 + 25;
+
+    // Calculate the new X position, moving from right to left
+    const currentX = startX - (animationTime * speed) % travelDistance;
+
+    // Update the fish's position while maintaining its altitude and depth
     fishRef.current.position.x = currentX;
     fishRef.current.position.y = startPosition.y;
     fishRef.current.position.z = startPosition.z;
-    
-    // Make fish face left (swimming direction)
+
+    // Ensure the fish is always facing left
     fishRef.current.rotation.y = -Math.PI / 2;
   });
 

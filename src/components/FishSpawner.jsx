@@ -12,8 +12,8 @@ import Fish from "./Fish";
  */
 export default function FishSpawner({ 
   fishCount = 5,
-  baseSpeed = 15, // 5x faster than original (3 * 5 = 15)
-  altitudeRange = { min: -50, max: 20 },
+  baseSpeed = 10, // 5x faster than original (3 * 5 = 15)
+  altitudeRange = { min: -150, max: -30 }, // Well below boat (y=10) to bottom of screen
   spawnArea = { x: 0, z: 0 },
   screenWidth = 400,
   fishTypes = ["fish1"], // Can be extended for different fish models
@@ -57,6 +57,7 @@ export default function FishSpawner({
           position={config.position}
           speed={config.speed}
           screenWidth={screenWidth}
+          spawnDelay={config.spawnDelay}
           scale={config.size * 6} // Apply size variation to the base scale
           userData={{
             // Store game-related data that can be accessed for catching mechanics
