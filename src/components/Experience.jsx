@@ -4,7 +4,7 @@ export const Experience = () => {
   return (
     <>
       <OrbitControls 
-        target={[0, 8, 0]}
+        target={[0, 10, 0]}
         enablePan={true}
         enableZoom={true}
         enableRotate={false}
@@ -15,25 +15,12 @@ export const Experience = () => {
       <Text position={[12, 0, 0]} fontSize={3} color="red" anchorX="center" anchorY="middle">X</Text>
       <Text position={[0, 12, 0]} fontSize={3} color="green" anchorX="center" anchorY="middle">Y</Text>
       <Text position={[0, 0, 12]} fontSize={3} color="blue" anchorX="center" anchorY="middle">Z</Text>
-      
-      {/* 
-      First cube
-      <mesh position={[-2, 0, 0]}>
-        <boxGeometry />
-        <meshNormalMaterial />
-      </mesh>
-      
-      Second cube
-      <mesh position={[2, 0, 0]}>
-        <boxGeometry />
-        <meshStandardMaterial color="hotpink" />
-      </mesh>
-      */}
+    
       
       {/* Add some lighting for the standard material */}
       <ambientLight intensity={0.3} />
       <directionalLight 
-        position={[10, 10, 5]} 
+        position={[0, 20, 0]} 
         intensity={1.5}
         castShadow
         shadow-mapSize-width={2048}
