@@ -3,7 +3,12 @@ import { Gltf, OrbitControls, Text } from "@react-three/drei";
 export const Experience = () => {
   return (
     <>
-      <OrbitControls />
+      <OrbitControls 
+        target={[0, 0, 0]}
+        enablePan={true}
+        enableZoom={true}
+        enableRotate={true}
+      />
       <axesHelper args={[10]} />
       
       {/* Axis labels */}
@@ -40,9 +45,9 @@ export const Experience = () => {
         shadow-camera-bottom={-20}
       />
       <Gltf src="/models/underwater_skybox.glb" />
-      <Gltf src="/models/boat1.glb" position={[0, 100, 0]} scale={0.1} castShadow receiveShadow />
-      <Gltf src="/models/fish1.glb" castShadow receiveShadow />
-      <Gltf src="/models/lure1.glb" position={[0, 50, 0]} scale={10} rotation={[90, 0, 0]} castShadow receiveShadow />
+      <Gltf src="/models/boat1.glb" position={[0, 10, 0]} scale={0.1} castShadow receiveShadow />
+      <Gltf src="/models/fish1.glb" rotation={[0, Math.PI/2, 0]} scale={6} castShadow receiveShadow />
+      <Gltf src="/models/lure1.glb" position={[0, 5, 0]} scale={10} rotation={[0, 0, -Math.PI/2]} castShadow receiveShadow />
     </>
   );
 };
