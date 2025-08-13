@@ -4,10 +4,10 @@ export const Experience = () => {
   return (
     <>
       <OrbitControls 
-        target={[0, 0, 0]}
+        target={[0, 8, 0]}
         enablePan={true}
         enableZoom={true}
-        enableRotate={true}
+        enableRotate={false}
       />
       <axesHelper args={[10]} />
       
