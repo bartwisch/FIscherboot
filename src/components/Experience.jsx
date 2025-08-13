@@ -1,7 +1,7 @@
 import { Gltf, OrbitControls, Text } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import { useRef } from "react";
-import CameraHUD from "./CameraHUD";
+
 import FishSpawner from "./FishSpawner";
 
 export const Experience = () => {
@@ -13,14 +13,14 @@ export const Experience = () => {
       <OrbitControls 
         ref={orbitRef}
         target={[20.42, -90.13, -14.11]}
-        enablePan={true}
-        enableZoom={true}
-        enableRotate={true}
+        enablePan={false}
+        enableZoom={false}
+        enableRotate={false}
       />
       <axesHelper args={[10]} />
 
-      {/* Camera HUD overlay (screen-space) */}
-      <CameraHUD orbitRef={orbitRef} />
+
+      
       
       {/* Axis labels */}
       <Text position={[12, 0, 0]} fontSize={3} color="red" anchorX="center" anchorY="middle">X</Text>
@@ -42,13 +42,13 @@ export const Experience = () => {
         shadow-camera-top={20}
         shadow-camera-bottom={-20}
       />
-      <Gltf src="/models/underwater_skybox.glb" />
+      <Gltf src="/models/underwater_skybox.glb" scale={2.5}   />
       <Gltf src="/models/boat1.glb" position={[0, 10, 0]} scale={0.1} castShadow receiveShadow />
       <FishSpawner 
         fishCount={5}
-        baseSpeed={10}
+        
         altitudeRange={{ min: -150, max: -30 }} // Deep underwater
-        spawnArea={{ x: 0, z: 0 }} // Centered spawn area
+        spawnArea={{ x: 100, z: -10 }} // Start further away
         screenWidth={viewport.width} // Use full screen width
       />
       <Gltf src="/models/lure1.glb" position={[0, 5, 0]} scale={10} rotation={[0, 0, -Math.PI/2]} castShadow receiveShadow />

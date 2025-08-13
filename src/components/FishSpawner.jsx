@@ -12,10 +12,10 @@ import Fish from "./Fish";
  */
 export default function FishSpawner({ 
   fishCount = 5,
-  baseSpeed = 10, // 5x faster than original (3 * 5 = 15)
+  baseSpeed = 55, // 5x faster than original (3 * 5 = 15)
   altitudeRange = { min: -150, max: -30 }, // Well below boat (y=10) to bottom of screen
   spawnArea = { x: 0, z: 0 },
-  screenWidth = 400,
+  screenWidth = 800,
   fishTypes = ["fish1"], // Can be extended for different fish models
   ...props 
 }) {

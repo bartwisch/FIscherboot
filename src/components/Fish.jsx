@@ -27,11 +27,11 @@ export default function Fish({ speed = 3, screenWidth = 40, spawnDelay = 0, ...p
     // The effective time for animation, starting from zero after the delay
     const animationTime = elapsedTime - spawnDelay;
 
-    // Define the total travel distance, including an off-screen buffer
-    const travelDistance = screenWidth + 50; // 50 is a buffer to ensure it's fully off-screen
+    // Define the total travel distance, from one edge to the other plus buffer
+    const travelDistance = screenWidth + 10;
     
-    // Start position is just off-screen to the right
-    const startX = screenWidth / 2 + 25;
+    // Start position is just off the right side of the screen, relative to the spawn center
+    const startX = startPosition.x + screenWidth / 2 + 5; // `+5` is a small buffer
 
     // Calculate the new X position, moving from right to left
     const currentX = startX - (animationTime * speed) % travelDistance;
