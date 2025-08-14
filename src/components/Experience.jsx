@@ -24,13 +24,12 @@ export const Experience = ({ onScoreUpdate }) => {
       const altitude = altitudeRange.min + Math.random() * (altitudeRange.max - altitudeRange.min);
       const speedVariation = 0.5 + Math.random();
       const sizeVariation = 0.8 + Math.random() * 0.4;
-      const depthVariation = (Math.random() - 0.5) * 10;
       const spawnDelay = Math.random() * 5;
 
       configs.push({
         id: `fish_${i}_${Date.now()}`,
         ref: createRef(),
-        position: [spawnArea.x, altitude, spawnArea.z + depthVariation],
+        position: [spawnArea.x, altitude, spawnArea.z], // All fish at same Z position
         speed: baseSpeed * speedVariation,
         size: sizeVariation,
         spawnDelay,
@@ -116,7 +115,7 @@ export const Experience = ({ onScoreUpdate }) => {
 
 
       // Only check collision threshold
-      if (distance < 20) {
+      if (distance < 25) {
         console.log(`Fish ${fish.id} caught! Distance: ${distance.toFixed(2)}`);
         // Create a fish object to pass to the lure
         const caughtFishObj = {
