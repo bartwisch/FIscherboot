@@ -18,13 +18,13 @@ export const Experience = ({ onScoreUpdate }) => {
     const fishCount = 5;
     const baseSpeed = 55;
     const altitudeRange = { min: -150, max: -30 };
-    const spawnArea = { x: 100, z: -10 };
+    const spawnArea = { x: 100, z: 0 };
 
     for (let i = 0; i < fishCount; i++) {
       const altitude = altitudeRange.min + Math.random() * (altitudeRange.max - altitudeRange.min);
       const speedVariation = 0.5 + Math.random();
       const sizeVariation = 0.8 + Math.random() * 0.4;
-      const depthVariation = (Math.random() - 0.5) * 50;
+      const depthVariation = (Math.random() - 0.5) * 10;
       const spawnDelay = Math.random() * 5;
 
       configs.push({
@@ -44,7 +44,13 @@ export const Experience = ({ onScoreUpdate }) => {
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.code === 'Space') {
-        lureRef.current?.fire();
+        if (!lureRef.current) return;
+        // Toggle: if descending, reel; if idle, fire; ignore while reeling/caught
+        if (lureRef.current.isFiring()) {
+          lureRef.current.reel();
+        } else if (!lureRef.current.isMoving()) {
+          lureRef.current.fire();
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -53,7 +59,8 @@ export const Experience = ({ onScoreUpdate }) => {
 
   // Collision detection and catching logic
   useFrame(() => {
-    if (!lureRef.current?.isMoving()) return;
+    // Only allow catching when the lure is descending
+    if (!lureRef.current?.isFiring()) return;
 
     const lurePosition = lureRef.current.getPosition();
 
@@ -85,7 +92,7 @@ export const Experience = ({ onScoreUpdate }) => {
         target={[20.42, -90.13, -14.11]}
         enablePan={false}
         enableZoom={false}
-        enableRotate={false}
+        enableRotate={true}
       />
       <axesHelper args={[10]} />
 
