@@ -59,7 +59,15 @@ export const Experience = ({ onScoreUpdate }) => {
 
   // Collision detection and catching logic
   useFrame(() => {
-    if (!lureRef.current || !lureRef.current.isFiring()) {
+    if (!lureRef.current) {
+      return;
+    }
+
+    const isFiring = lureRef.current.isFiring();
+    const isMoving = lureRef.current.isMoving();
+    
+    // Only check for collisions when the lure is moving
+    if (!isFiring && !isMoving) {
       return;
     }
 
@@ -70,10 +78,20 @@ export const Experience = ({ onScoreUpdate }) => {
         const fishPosition = fish.ref.current.position;
         const distance = lurePosition.distanceTo(fishPosition);
 
-        if (distance < 8) { // Collision threshold
-          console.log(`Collision with fish ${fish.id}`);
-          handleCatch(fish.id);
-          lureRef.current.reel(); // Stop the lure
+        // Log when a fish is close to the lure (within 20 units)
+        if (distance < 20) {
+          console.log(`Fish ${fish.id} near lure - Distance: ${distance.toFixed(2)}`);
+        }
+
+        if (distance < 12) { // Increased collision threshold
+          console.log(`Fish ${fish.id} touched by lure at distance ${distance.toFixed(2)}`);
+          // Create a fish object to pass to the lure
+          const caughtFishObj = {
+            id: fish.id,
+            ref: fish.ref
+          };
+          // Start reeling with the fish attached
+          lureRef.current.startReeling(caughtFishObj);
           break; // Catch one fish at a time
         }
       }
@@ -144,7 +162,7 @@ export const Experience = ({ onScoreUpdate }) => {
       <Gltf src="/models/underwater_skybox.glb" scale={2.5}   />
       <Gltf src="/models/boat1.glb" position={[0, 10, 0]} scale={0.1} castShadow receiveShadow />
       <FishSpawner fishConfigs={fishConfigs} screenWidth={viewport.width} />
-      <Lure ref={lureRef} initialPosition={[0, 5, -15]} onCatch={handleCatch} />
+      <Lure ref={lureRef} initialPosition={[50, 5, 0]} onCatch={handleCatch} />
     </>
   );
 };
