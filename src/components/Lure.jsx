@@ -12,7 +12,6 @@ const Lure = forwardRef(({ initialPosition = [0, 5, -15], speed = 60, resetDepth
   const [rotationAngle, setRotationAngle] = useState(0);
   const [firingDirection, setFiringDirection] = useState(null);
   const [currentPendulumAngle, setCurrentPendulumAngle] = useState(0);
-  const [trailPositions, setTrailPositions] = useState([]);
 
   // Memoize the starting position to avoid re-calculations
   const startPosition = useMemo(() => new THREE.Vector3(...initialPosition), [initialPosition]);
@@ -58,27 +57,6 @@ const Lure = forwardRef(({ initialPosition = [0, 5, -15], speed = 60, resetDepth
   }));
 
   useFrame((state, delta) => {
-    // Update trail when lure is moving
-    if ((isFiring || isReeling) && lureRef.current) {
-      setTrailPositions(prev => {
-        const newTrail = [...prev];
-        const currentPos = lureRef.current.position.clone();
-        newTrail.push({
-          position: currentPos,
-          life: 1.0
-        });
-        
-        // Fade out trail positions and remove old ones
-        return newTrail
-          .map(trail => ({ ...trail, life: trail.life - delta * 3 }))
-          .filter(trail => trail.life > 0)
-          .slice(-15); // Keep only last 15 positions
-      });
-    } else {
-      // Clear trail when idle
-      setTrailPositions([]);
-    }
-
     // Pendulum motion when idle
     if (!isFiring && !isReeling) {
       setRotationAngle(prev => prev + delta * 2); // Time for pendulum motion
@@ -156,20 +134,6 @@ const Lure = forwardRef(({ initialPosition = [0, 5, -15], speed = 60, resetDepth
 
   return (
     <group ref={lureRef} position={startPosition}>
-      {/* Water trail effect behind the lure */}
-      {trailPositions.map((trail, index) => (
-        <mesh 
-          key={index}
-          position={trail.position}
-        >
-          <sphereGeometry args={[trail.life * 1.5]} />
-          <meshBasicMaterial 
-            color="#40E0D0" 
-            transparent 
-            opacity={trail.life * 0.7} 
-          />
-        </mesh>
-      ))}
       
       {/* Pivot point (attachment point) */}
       <group rotation={[0, 0, currentPendulumAngle]}>
