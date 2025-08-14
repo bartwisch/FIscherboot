@@ -9,6 +9,9 @@ const Lure = forwardRef(({ initialPosition = [0, 5, -15], speed = 60, resetDepth
   const [caughtFish, setCaughtFish] = useState(null);
   const [isReeling, setIsReeling] = useState(false);
   const [fishProcessed, setFishProcessed] = useState(false); // Prevent duplicate onCatch calls
+  const [rotationAngle, setRotationAngle] = useState(0);
+  const [firingDirection, setFiringDirection] = useState(null);
+  const [currentPendulumAngle, setCurrentPendulumAngle] = useState(0);
 
   // Memoize the starting position to avoid re-calculations
   const startPosition = useMemo(() => new THREE.Vector3(...initialPosition), [initialPosition]);
@@ -18,6 +21,13 @@ const Lure = forwardRef(({ initialPosition = [0, 5, -15], speed = 60, resetDepth
     fire: () => {
       if (!isFiring && !caughtFish && !isReeling) {
         lureRef.current.position.copy(startPosition);
+        // Capture the current pendulum angle at the moment of firing
+        const direction = new THREE.Vector3(
+          Math.cos(currentPendulumAngle) * 50, // x component
+          -80, // y component (downward)
+          0  // z component - never change z position
+        );
+        setFiringDirection(direction);
         setIsFiring(true);
         setFishProcessed(false); // Reset the flag when firing
       }
@@ -43,6 +53,14 @@ const Lure = forwardRef(({ initialPosition = [0, 5, -15], speed = 60, resetDepth
   }));
 
   useFrame((state, delta) => {
+    // Pendulum motion when idle
+    if (!isFiring && !isReeling) {
+      setRotationAngle(prev => prev + delta * 2); // Time for pendulum motion
+      const pendulumAngle = Math.sin(rotationAngle) * Math.PI / 3; // Swing between -60 and +60 degrees
+      setCurrentPendulumAngle(pendulumAngle); // Store current angle for firing
+      lureRef.current.rotation.z = pendulumAngle;
+    }
+
     // Handle reeling (with or without a caught fish)
     if (isReeling) {
       const boatPosition = startPosition;
@@ -76,20 +94,31 @@ const Lure = forwardRef(({ initialPosition = [0, 5, -15], speed = 60, resetDepth
         setCaughtFish(null);
         setIsReeling(false);
         setFishProcessed(false); // Reset flag for next catch
+        setFiringDirection(null); // Reset firing direction
         lureRef.current.position.copy(startPosition);
+        const pendulumAngle = Math.sin(rotationAngle) * Math.PI / 3; // Restore pendulum motion
+        lureRef.current.rotation.z = pendulumAngle;
       }
       return;
     }
 
-    // Handle the lure firing downwards
+    // Handle the lure firing in direction
     if (!isFiring) return;
-    lureRef.current.position.y -= speed * delta;
+    
+    if (firingDirection) {
+      // Move in the firing direction (x5 speed) - no Z movement
+      lureRef.current.position.x += (firingDirection.x * delta) / 2;
+      lureRef.current.position.y += (firingDirection.y * delta) / 2;
+      // Z position remains constant
 
-    // Reset if it goes off-screen without a catch
-    if (lureRef.current.position.y < resetDepth) {
-      setIsFiring(false);
-      // Begin auto-retrieval when reaching max depth
-      setIsReeling(true);
+      // Reset if it goes off-screen without a catch
+      if (lureRef.current.position.y < resetDepth || 
+          Math.abs(lureRef.current.position.x - startPosition.x) > 100) {
+        setIsFiring(false);
+        setFiringDirection(null);
+        // Begin auto-retrieval when reaching boundaries
+        setIsReeling(true);
+      }
     }
   });
 
@@ -102,6 +131,13 @@ const Lure = forwardRef(({ initialPosition = [0, 5, -15], speed = 60, resetDepth
         castShadow
         receiveShadow
       />
+      {/* Direction indicator line - shows where lure is facing */}
+      <group rotation={[0, 0, currentPendulumAngle]}>
+        <mesh position={[15, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+          <cylinderGeometry args={[0.5, 0.5, 30]} />
+          <meshBasicMaterial color="red" />
+        </mesh>
+      </group>
       {/* Add a light source to the lure */}
       <pointLight 
         color="aqua" 
