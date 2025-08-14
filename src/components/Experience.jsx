@@ -155,7 +155,7 @@ export const Experience = ({ onScoreUpdate }) => {
         ref={orbitRef}
         target={[20.42, -90.13, -14.11]}
         enablePan={false}
-        enableZoom={false}
+        enableZoom={true}
         enableRotate={false}
       />
     
