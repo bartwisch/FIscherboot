@@ -106,10 +106,10 @@ export const Experience = ({ onScoreUpdate }) => {
     
       
       {/* Add some lighting for the standard material */}
-      <ambientLight intensity={0.3} />
+      <ambientLight intensity={0.5} />
       <directionalLight 
-        position={[0, 5, 0]} 
-        intensity={1.5}
+        position={[0, 25, 0]} 
+        intensity={3.5}
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
@@ -119,6 +119,24 @@ export const Experience = ({ onScoreUpdate }) => {
         shadow-camera-top={20}
         shadow-camera-bottom={-20}
       />
+      {/* Bright light above the boat */}
+      <pointLight 
+        position={[0, 20, 0]} 
+        intensity={5} 
+        distance={50} 
+        decay={1}
+        color="white"
+        castShadow
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+      />
+      
+      {/* Water surface to receive shadows */}
+      <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[200, 200]} />
+        <meshStandardMaterial color="#006994" transparent opacity={0.8} />
+      </mesh>
+      
       <Gltf src="/models/underwater_skybox.glb" scale={2.5}   />
       <Gltf src="/models/boat1.glb" position={[0, 10, 0]} scale={0.1} castShadow receiveShadow />
       <FishSpawner fishConfigs={fishConfigs} screenWidth={viewport.width} />
