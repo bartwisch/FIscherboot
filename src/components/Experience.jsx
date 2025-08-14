@@ -90,8 +90,9 @@ export const Experience = ({ onScoreUpdate }) => {
       
       const distance = lurePosition.distanceTo(fishPosition);
 
+
       // Only check collision threshold
-      if (distance < 12) {
+      if (distance < 20) {
         console.log(`Fish ${fish.id} caught! Distance: ${distance.toFixed(2)}`);
         // Create a fish object to pass to the lure
         const caughtFishObj = {
@@ -110,6 +111,9 @@ export const Experience = ({ onScoreUpdate }) => {
     console.log(`Caught fish ${caughtFishId}. Removing it.`);
     console.log(`Fish configs before removal: ${fishConfigs.length}`);
     console.log(`Fish configs IDs before:`, fishConfigs.map(f => f.id));
+    
+    // Award 10 points for each goldfish caught
+    onScoreUpdate(10);
     
     setFishConfigs((prevConfigs) => {
       const newConfigs = prevConfigs.filter((fish) => fish.id !== caughtFishId);

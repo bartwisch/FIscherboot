@@ -60,10 +60,6 @@ const Fish = forwardRef(({ speed = 3, screenWidth = 40, spawnDelay = 0, ...props
     // Force update the matrix to ensure rendering updates
     fishRef.current.updateMatrixWorld(true);
     
-    // Debug logging every 60 frames (about once per second)
-    if (Math.floor(animationTime * 60) % 60 === 0) {
-      console.log(`Fish ${fishId}: position=(${currentX.toFixed(1)}, ${startPosition.y.toFixed(1)}, ${startPosition.z.toFixed(1)}), time=${animationTime.toFixed(1)}`);
-    }
   });
 
   return (
@@ -74,18 +70,6 @@ const Fish = forwardRef(({ speed = 3, screenWidth = 40, spawnDelay = 0, ...props
         castShadow
         receiveShadow
       />
-      {/* Fish ID number label */}
-      <Text
-        position={[0, 8, 0]} // Above the fish
-        fontSize={6}
-        color="yellow"
-        anchorX="center"
-        anchorY="middle"
-        outlineWidth={1}
-        outlineColor="black"
-      >
-        {fishId.replace('fish_', '').split('_')[0]}
-      </Text>
     </group>
   );
 });
