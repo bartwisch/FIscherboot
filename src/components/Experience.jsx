@@ -66,6 +66,11 @@ export const Experience = ({ onScoreUpdate }) => {
     const isFiring = lureRef.current.isFiring();
     const isMoving = lureRef.current.isMoving();
     
+    // Debug: Log lure state
+    if (isFiring || isMoving) {
+      console.log(`Lure state - isFiring: ${isFiring}, isMoving: ${isMoving}`);
+    }
+    
     // Only check for collisions when the lure is moving
     if (!isFiring && !isMoving) {
       return;
@@ -74,35 +79,47 @@ export const Experience = ({ onScoreUpdate }) => {
     const lurePosition = lureRef.current.getPosition();
 
     for (const fish of fishConfigs) {
-      if (fish.ref.current) {
-        const fishPosition = fish.ref.current.position;
-        const distance = lurePosition.distanceTo(fishPosition);
+      // Debug: Check if fish ref is valid
+      if (!fish.ref) {
+        console.log(`Fish ${fish.id} has no ref`);
+        continue;
+      }
+      
+      if (!fish.ref.current) {
+        console.log(`Fish ${fish.id} ref.current is null`);
+        continue;
+      }
+      
+      const fishPosition = fish.ref.current.position;
+      const distance = lurePosition.distanceTo(fishPosition);
 
-        // Log when a fish is close to the lure (within 20 units)
-        if (distance < 20) {
-          console.log(`Fish ${fish.id} near lure - Distance: ${distance.toFixed(2)}`);
-        }
+      // Log when a fish is close to the lure (within 20 units)
+      if (distance < 20) {
+        console.log(`Fish ${fish.id} near lure - Distance: ${distance.toFixed(2)}`);
+      }
 
-        if (distance < 12) { // Increased collision threshold
-          console.log(`Fish ${fish.id} touched by lure at distance ${distance.toFixed(2)}`);
-          // Create a fish object to pass to the lure
-          const caughtFishObj = {
-            id: fish.id,
-            ref: fish.ref
-          };
-          // Start reeling with the fish attached
-          lureRef.current.startReeling(caughtFishObj);
-          break; // Catch one fish at a time
-        }
+      if (distance < 12) { // Increased collision threshold
+        console.log(`Fish ${fish.id} touched by lure at distance ${distance.toFixed(2)}`);
+        // Create a fish object to pass to the lure
+        const caughtFishObj = {
+          id: fish.id,
+          ref: fish.ref
+        };
+        // Start reeling with the fish attached
+        lureRef.current.startReeling(caughtFishObj);
+        break; // Catch one fish at a time
       }
     }
   });
 
   const handleCatch = (caughtFishId) => {
     console.log(`Caught fish ${caughtFishId}. Removing it.`);
-    setFishConfigs((prevConfigs) =>
-      prevConfigs.filter((fish) => fish.id !== caughtFishId)
-    );
+    console.log(`Fish configs before removal: ${fishConfigs.length}`);
+    setFishConfigs((prevConfigs) => {
+      const newConfigs = prevConfigs.filter((fish) => fish.id !== caughtFishId);
+      console.log(`Fish configs after removal: ${newConfigs.length}`);
+      return newConfigs;
+    });
     // Note: We are not spawning a new fish here to simplify the logic for now.
     // We can add that back later if needed.
   };
@@ -162,7 +179,7 @@ export const Experience = ({ onScoreUpdate }) => {
       <Gltf src="/models/underwater_skybox.glb" scale={2.5}   />
       <Gltf src="/models/boat1.glb" position={[0, 10, 0]} scale={0.1} castShadow receiveShadow />
       <FishSpawner fishConfigs={fishConfigs} screenWidth={viewport.width} />
-      <Lure ref={lureRef} initialPosition={[50, 5, 0]} onCatch={handleCatch} />
+      <Lure ref={lureRef} initialPosition={[50, 5, 0]} onCatch={handleCatch} fishConfigs={fishConfigs} />
     </>
   );
 };

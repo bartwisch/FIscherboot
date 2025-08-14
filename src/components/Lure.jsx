@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import { Gltf } from '@react-three/drei';
 import * as THREE from 'three';
 
-const Lure = forwardRef(({ initialPosition = [0, 5, 0], speed = 60, resetDepth = -200, onCatch = () => {} }, ref) => {
+const Lure = forwardRef(({ initialPosition = [0, 5, 0], speed = 60, resetDepth = -200, onCatch = () => {}, fishConfigs = [] }, ref) => {
   const lureRef = useRef();
   const [isFiring, setIsFiring] = useState(false);
   const [caughtFish, setCaughtFish] = useState(null);
@@ -44,13 +44,29 @@ const Lure = forwardRef(({ initialPosition = [0, 5, 0], speed = 60, resetDepth =
     if (isReeling) {
       const boatPosition = startPosition;
       lureRef.current.position.lerp(boatPosition, 0.08);
-      if (caughtFish?.ref?.current) {
-        caughtFish.ref.current.position.copy(lureRef.current.position);
+      // Only update the caught fish position if it still exists in fishConfigs
+      if (caughtFish && fishConfigs.some(fish => fish.id === caughtFish.id)) {
+        if (caughtFish.ref?.current) {
+          // Check if the fish component is still mounted by trying to access its position
+          try {
+            // This will throw an error if the component is unmounted
+            const fishPosition = caughtFish.ref.current.position;
+            // If we get here, the component is still mounted, so update its position
+            fishPosition.copy(lureRef.current.position);
+          } catch (error) {
+            console.log("Caught fish component appears to be unmounted:", error);
+            // If there's an error, the component is unmounted, so we'll stop tracking it
+          }
+        }
+      } else if (caughtFish) {
+        console.log(`Caught fish ${caughtFish.id} no longer exists in fishConfigs`);
       }
 
       // When it reaches the boat, reset everything
       if (lureRef.current.position.distanceTo(boatPosition) < 1) {
+        console.log("Lure reached boat, resetting");
         if (caughtFish) {
+          console.log(`Calling onCatch for fish ${caughtFish.id}`);
           onCatch(caughtFish.id); // Notify parent to remove the fish
         }
         setCaughtFish(null);
