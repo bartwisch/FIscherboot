@@ -1,13 +1,31 @@
 import { Gltf, OrbitControls, Text } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 
 import FishSpawner from "./FishSpawner";
+import Lure from "./Lure";
 
 export const Experience = () => {
   const { camera, viewport } = useThree();
   const orbitRef = useRef();
-  
+  const lureRef = useRef();
+
+  // Set up the spacebar event listener
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.code === 'Space') {
+        lureRef.current?.fire();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    // Cleanup function
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   return (
     <>
       <OrbitControls 
@@ -51,7 +69,7 @@ export const Experience = () => {
         spawnArea={{ x: 100, z: -10 }} // Start further away
         screenWidth={viewport.width} // Use full screen width
       />
-      <Gltf src="/models/lure1.glb" position={[0, 5, 0]} scale={10} rotation={[0, 0, -Math.PI/2]} castShadow receiveShadow />
+      <Lure ref={lureRef} initialPosition={[0, 5, 0]} />
     </>
   );
 };
