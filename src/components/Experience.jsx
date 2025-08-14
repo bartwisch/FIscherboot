@@ -135,15 +135,6 @@ export const Experience = ({ onScoreUpdate }) => {
         enableZoom={false}
         enableRotate={true}
       />
-      <axesHelper args={[10]} />
-
-
-      
-      
-      {/* Axis labels */}
-      <Text position={[12, 0, 0]} fontSize={3} color="red" anchorX="center" anchorY="middle">X</Text>
-      <Text position={[0, 12, 0]} fontSize={3} color="green" anchorX="center" anchorY="middle">Y</Text>
-      <Text position={[0, 0, 12]} fontSize={3} color="blue" anchorX="center" anchorY="middle">Z</Text>
     
       
       {/* Add some lighting for the standard material */}
