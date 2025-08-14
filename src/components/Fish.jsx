@@ -50,7 +50,7 @@ const Fish = forwardRef(({ speed = 3, screenWidth = 40, spawnDelay = 0, ...props
     <group ref={fishRef} {...props}>
       <Gltf
         src="/models/fish1.glb"
-        scale={6}
+        scale={1}
         castShadow
         receiveShadow
       />
