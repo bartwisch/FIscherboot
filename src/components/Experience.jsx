@@ -122,7 +122,7 @@ export const Experience = ({ onScoreUpdate }) => {
       <Gltf src="/models/underwater_skybox.glb" scale={2.5}   />
       <Gltf src="/models/boat1.glb" position={[0, 10, 0]} scale={0.1} castShadow receiveShadow />
       <FishSpawner fishConfigs={fishConfigs} screenWidth={viewport.width} />
-      <Lure ref={lureRef} initialPosition={[0, 5, 0]} onCatch={handleCatch} />
+      <Lure ref={lureRef} initialPosition={[0, 5, -15]} onCatch={handleCatch} />
     </>
   );
 };
