@@ -23,7 +23,7 @@ const Lure = forwardRef(({ initialPosition = [0, 5, 0], speed = 60, resetDepth =
     // Explicit state checks for parent logic
     isFiring: () => isFiring,
     isMoving: () => isFiring || !!caughtFish || isReeling,
-    getPosition: () => lureRef.current.position,
+    getPosition: () => lureRef.current?.position || new THREE.Vector3(0, 0, 0),
     // Start reeling due to a caught fish
     startReeling: (fish) => {
       setIsFiring(false);

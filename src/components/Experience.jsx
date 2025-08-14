@@ -58,31 +58,83 @@ export const Experience = ({ onScoreUpdate }) => {
   }, []);
 
   // Collision detection and catching logic
-  useFrame(() => {
-    // Only allow catching when the lure is descending
-    if (!lureRef.current?.isFiring()) return;
+  useFrame((state, delta) => {
+    console.log(`useFrame running, delta: ${delta}`);
+    // Only process when the lure is firing (descending)
+    if (!lureRef.current?.isFiring()) {
+      // console.log('Lure is not firing, returning.');
+      return;
+    }
+    console.log('Lure is firing, proceeding with collision check.');
 
     const lurePosition = lureRef.current.getPosition();
+    if (!lurePosition) {
+      console.log('Lure position is null, returning.');
+      return;
+    }
+    console.log(`Lure position: ${lurePosition.x.toFixed(2)}, ${lurePosition.y.toFixed(2)}, ${lurePosition.z.toFixed(2)}`);
 
-    for (const fish of fishConfigs) {
+    // Check each fish for collision
+    for (let i = fishConfigs.length - 1; i >= 0; i--) {
+      const fish = fishConfigs[i];
       if (fish.ref.current) {
         const fishPosition = fish.ref.current.position;
+        
+        // Simple 3D distance check
         const distance = lurePosition.distanceTo(fishPosition);
-
-        if (distance < 5) { // Collision threshold
-          lureRef.current.startReeling(fish);
-          break; // Catch one fish at a time
+        
+        // Collision threshold
+        if (distance < 10) {
+          console.log(`COLLISION! Fish ${fish.id} caught at distance ${distance}`);
+          
+          // Immediately handle the catch (no timeout)
+          handleCatch(fish.id);
+          
+          // Stop the lure
+          lureRef.current.reel();
+          
+          return; // Exit early to prevent multiple catches in one frame
         }
       }
     }
   });
 
   const handleCatch = (caughtFishId) => {
+    console.log('Catching fish:', caughtFishId);
+    
+    // Find and score the caught fish
     const caughtFish = fishConfigs.find(fish => fish.id === caughtFishId);
     if (caughtFish) {
       onScoreUpdate(caughtFish.points);
     }
-    setFishConfigs(prevConfigs => prevConfigs.filter(fish => fish.id !== caughtFishId));
+    
+    // Update fish configs: remove caught fish and add new one
+    setFishConfigs(prevConfigs => {
+      // Remove the caught fish
+      const filteredConfigs = prevConfigs.filter(fish => fish.id !== caughtFishId);
+      
+      // Create a new fish to maintain count
+      const altitudeRange = { min: -150, max: -30 };
+      const spawnArea = { x: 100, z: 0 };
+      const baseSpeed = 55;
+      
+      const newFish = {
+        id: `fish_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        ref: createRef(),
+        position: [
+          spawnArea.x, 
+          altitudeRange.min + Math.random() * (altitudeRange.max - altitudeRange.min),
+          spawnArea.z + (Math.random() - 0.5) * 10
+        ],
+        speed: baseSpeed * (0.5 + Math.random()),
+        size: 0.8 + Math.random() * 0.4,
+        spawnDelay: 0,
+        points: Math.floor((0.8 + Math.random() * 0.4) * 100),
+      };
+      
+      console.log(`Removed fish ${caughtFishId}, added fish ${newFish.id}`);
+      return [...filteredConfigs, newFish];
+    });
   };
 
   return (
