@@ -15,7 +15,7 @@ export const Experience = ({ onScoreUpdate }) => {
   // Generate initial fish configurations
   useMemo(() => {
     const configs = [];
-    const fishCount = 25; // Increased from 5 to 25
+    const fishCount = 10; // Reduced to test performance
     const baseSpeed = 55;
     const altitudeRange = { min: -150, max: -30 };
     const spawnArea = { x: 100, z: 0 };
@@ -66,40 +66,33 @@ export const Experience = ({ onScoreUpdate }) => {
     const isFiring = lureRef.current.isFiring();
     const isMoving = lureRef.current.isMoving();
     
-    // Debug: Log lure state
-    if (isFiring || isMoving) {
-      console.log(`Lure state - isFiring: ${isFiring}, isMoving: ${isMoving}`);
-    }
-    
-    // Only check for collisions when the lure is moving
-    if (!isFiring && !isMoving) {
+    // Only check for collisions when the lure is firing (not when reeling)
+    if (!isFiring) {
       return;
     }
 
     const lurePosition = lureRef.current.getPosition();
 
     for (const fish of fishConfigs) {
-      // Debug: Check if fish ref is valid
-      if (!fish.ref) {
-        console.log(`Fish ${fish.id} has no ref`);
-        continue;
-      }
-      
-      if (!fish.ref.current) {
-        console.log(`Fish ${fish.id} ref.current is null`);
+      // Check if fish ref is valid
+      if (!fish.ref?.current) {
         continue;
       }
       
       const fishPosition = fish.ref.current.position;
+      
+      // Early exit if fish is too far away to avoid expensive distance calculations
+      const roughDistanceX = Math.abs(lurePosition.x - fishPosition.x);
+      const roughDistanceY = Math.abs(lurePosition.y - fishPosition.y);
+      if (roughDistanceX > 20 || roughDistanceY > 20) {
+        continue; // Skip expensive distance calculation if roughly too far
+      }
+      
       const distance = lurePosition.distanceTo(fishPosition);
 
-      // Log when a fish is close to the lure (within 20 units)
-      if (distance < 20) {
-        console.log(`Fish ${fish.id} near lure - Distance: ${distance.toFixed(2)}`);
-      }
-
-      if (distance < 12) { // Increased collision threshold
-        console.log(`Fish ${fish.id} touched by lure at distance ${distance.toFixed(2)}`);
+      // Only check collision threshold
+      if (distance < 12) {
+        console.log(`Fish ${fish.id} caught! Distance: ${distance.toFixed(2)}`);
         // Create a fish object to pass to the lure
         const caughtFishObj = {
           id: fish.id,
@@ -113,11 +106,16 @@ export const Experience = ({ onScoreUpdate }) => {
   });
 
   const handleCatch = (caughtFishId) => {
+    console.log(`========== FISH CAUGHT ==========`);
     console.log(`Caught fish ${caughtFishId}. Removing it.`);
     console.log(`Fish configs before removal: ${fishConfigs.length}`);
+    console.log(`Fish configs IDs before:`, fishConfigs.map(f => f.id));
+    
     setFishConfigs((prevConfigs) => {
       const newConfigs = prevConfigs.filter((fish) => fish.id !== caughtFishId);
       console.log(`Fish configs after removal: ${newConfigs.length}`);
+      console.log(`Fish configs IDs after:`, newConfigs.map(f => f.id));
+      console.log(`================================`);
       return newConfigs;
     });
     // Note: We are not spawning a new fish here to simplify the logic for now.
@@ -179,7 +177,7 @@ export const Experience = ({ onScoreUpdate }) => {
       <Gltf src="/models/underwater_skybox.glb" scale={2.5}   />
       <Gltf src="/models/boat1.glb" position={[0, 10, 0]} scale={0.1} castShadow receiveShadow />
       <FishSpawner fishConfigs={fishConfigs} screenWidth={viewport.width} />
-      <Lure ref={lureRef} initialPosition={[50, 5, 0]} onCatch={handleCatch} fishConfigs={fishConfigs} />
+      <Lure ref={lureRef} initialPosition={[0, 5, -15]} onCatch={handleCatch} fishConfigs={fishConfigs} />
     </>
   );
 };

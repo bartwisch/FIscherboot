@@ -3,11 +3,12 @@ import { useFrame } from '@react-three/fiber';
 import { Gltf } from '@react-three/drei';
 import * as THREE from 'three';
 
-const Lure = forwardRef(({ initialPosition = [0, 5, 0], speed = 60, resetDepth = -200, onCatch = () => {}, fishConfigs = [] }, ref) => {
+const Lure = forwardRef(({ initialPosition = [0, 5, -15], speed = 60, resetDepth = -200, onCatch = () => {}, fishConfigs = [] }, ref) => {
   const lureRef = useRef();
   const [isFiring, setIsFiring] = useState(false);
   const [caughtFish, setCaughtFish] = useState(null);
   const [isReeling, setIsReeling] = useState(false);
+  const [fishProcessed, setFishProcessed] = useState(false); // Prevent duplicate onCatch calls
 
   // Memoize the starting position to avoid re-calculations
   const startPosition = useMemo(() => new THREE.Vector3(...initialPosition), [initialPosition]);
@@ -18,6 +19,7 @@ const Lure = forwardRef(({ initialPosition = [0, 5, 0], speed = 60, resetDepth =
       if (!isFiring && !caughtFish && !isReeling) {
         lureRef.current.position.copy(startPosition);
         setIsFiring(true);
+        setFishProcessed(false); // Reset the flag when firing
       }
     },
     // Explicit state checks for parent logic
@@ -29,6 +31,7 @@ const Lure = forwardRef(({ initialPosition = [0, 5, 0], speed = 60, resetDepth =
       setIsFiring(false);
       setCaughtFish(fish);
       setIsReeling(true);
+      setFishProcessed(false); // Reset flag when catching a fish
     },
     // Manual reel-in (e.g., second press of Space)
     reel: () => {
@@ -65,12 +68,14 @@ const Lure = forwardRef(({ initialPosition = [0, 5, 0], speed = 60, resetDepth =
       // When it reaches the boat, reset everything
       if (lureRef.current.position.distanceTo(boatPosition) < 1) {
         console.log("Lure reached boat, resetting");
-        if (caughtFish) {
+        if (caughtFish && !fishProcessed) {
           console.log(`Calling onCatch for fish ${caughtFish.id}`);
           onCatch(caughtFish.id); // Notify parent to remove the fish
+          setFishProcessed(true); // Mark fish as processed to prevent duplicate calls
         }
         setCaughtFish(null);
         setIsReeling(false);
+        setFishProcessed(false); // Reset flag for next catch
         lureRef.current.position.copy(startPosition);
       }
       return;

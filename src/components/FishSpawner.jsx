@@ -16,6 +16,12 @@ export default function FishSpawner({
   ...props 
 }) {
   
+  // Log fish spawner state changes (only log significant changes)
+  if (fishConfigs.length !== FishSpawner.lastFishCount) {
+    console.log(`FishSpawner: Fish count changed from ${FishSpawner.lastFishCount || 'initial'} to ${fishConfigs.length}`);
+    FishSpawner.lastFishCount = fishConfigs.length;
+  }
+  
   return (
     <group {...props}>
       {fishConfigs.map((config) => (

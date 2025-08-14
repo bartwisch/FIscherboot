@@ -1,6 +1,6 @@
 import { useRef, useMemo, forwardRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Gltf } from "@react-three/drei";
+import { Gltf, Text } from "@react-three/drei";
 import * as THREE from "three";
 
 const Fish = forwardRef(({ speed = 3, screenWidth = 40, spawnDelay = 0, ...props }, ref) => {
@@ -13,8 +13,14 @@ const Fish = forwardRef(({ speed = 3, screenWidth = 40, spawnDelay = 0, ...props
     z: props.position?.[2] || 0
   }), [props.position]);
 
+  // Get fish ID for logging
+  const fishId = props.userData?.fishId || 'unknown';
+
     useFrame(({ clock }) => {
-    if (!fishRef.current) return;
+    if (!fishRef.current) {
+      console.log(`Fish ${fishId}: fishRef.current is null, skipping frame`);
+      return;
+    }
 
     const elapsedTime = clock.getElapsedTime();
 
@@ -22,6 +28,10 @@ const Fish = forwardRef(({ speed = 3, screenWidth = 40, spawnDelay = 0, ...props
     if (elapsedTime < spawnDelay) {
       fishRef.current.visible = false; // Keep fish hidden until it's time to spawn
       return;
+    }
+    
+    if (!fishRef.current.visible) {
+      console.log(`Fish ${fishId}: Now visible, starting animation at time ${elapsedTime}`);
     }
     fishRef.current.visible = true;
 
@@ -35,25 +45,47 @@ const Fish = forwardRef(({ speed = 3, screenWidth = 40, spawnDelay = 0, ...props
     const startX = startPosition.x + screenWidth / 2 + 5; // `+5` is a small buffer
 
     // Calculate the new X position, moving from right to left
-    const currentX = startX - (animationTime * speed) % travelDistance;
+    // Simple linear movement that loops smoothly
+    const distanceTraveled = (animationTime * speed) % travelDistance;
+    const currentX = startX - distanceTraveled;
+    
+    // Removed excessive logging - fish movement is working fine
 
     // Update the fish's position while maintaining its altitude and depth
-    fishRef.current.position.x = currentX;
-    fishRef.current.position.y = startPosition.y;
-    fishRef.current.position.z = startPosition.z;
+    fishRef.current.position.set(currentX, startPosition.y, startPosition.z);
 
     // Ensure the fish is always facing left
     fishRef.current.rotation.y = -Math.PI / 2;
+    
+    // Force update the matrix to ensure rendering updates
+    fishRef.current.updateMatrixWorld(true);
+    
+    // Debug logging every 60 frames (about once per second)
+    if (Math.floor(animationTime * 60) % 60 === 0) {
+      console.log(`Fish ${fishId}: position=(${currentX.toFixed(1)}, ${startPosition.y.toFixed(1)}, ${startPosition.z.toFixed(1)}), time=${animationTime.toFixed(1)}`);
+    }
   });
 
   return (
     <group ref={fishRef} {...props}>
       <Gltf
-        src="/models/fish1.glb"
-        scale={1}
+        src="/models/goldfish.glb"
+        scale={.1}
         castShadow
         receiveShadow
       />
+      {/* Fish ID number label */}
+      <Text
+        position={[0, 8, 0]} // Above the fish
+        fontSize={6}
+        color="yellow"
+        anchorX="center"
+        anchorY="middle"
+        outlineWidth={1}
+        outlineColor="black"
+      >
+        {fishId.replace('fish_', '').split('_')[0]}
+      </Text>
     </group>
   );
 });
