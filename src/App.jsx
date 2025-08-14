@@ -2,6 +2,7 @@ import { Canvas } from "@react-three/fiber";
 import { useState } from "react";
 import { Experience } from "./components/Experience";
 import Score from "./components/Score";
+import TouchInstructions from "./components/TouchInstructions";
 
 function App() {
   const [score, setScore] = useState(0);
@@ -13,6 +14,7 @@ function App() {
   return (
     <>
       <Score score={score} />
+      <TouchInstructions />
       <Canvas
         shadows
         camera={{ position: [7.12, -75.11, 213.04], fov: 75, near: 0.1, far: 1000 }}
@@ -27,6 +29,7 @@ function App() {
           preserveDrawingBuffer: false,
           powerPreference: "high-performance"
         }}
+        style={{ touchAction: 'none' }} // Prevent touch scrolling
       >
         <color attach="background" args={["#ececec"]} />
         <Experience onScoreUpdate={handleScoreUpdate} />

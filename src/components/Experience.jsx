@@ -40,21 +40,45 @@ export const Experience = ({ onScoreUpdate }) => {
     setFishConfigs(configs);
   }, []);
 
-  // Set up the spacebar event listener
+  // Set up the spacebar and touch event listeners
   useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (event.code === 'Space') {
-        if (!lureRef.current) return;
-        // Toggle: if descending, reel; if idle, fire; ignore while reeling/caught
-        if (lureRef.current.isFiring()) {
-          lureRef.current.reel();
-        } else if (!lureRef.current.isMoving()) {
-          lureRef.current.fire();
-        }
+    const handleInput = () => {
+      if (!lureRef.current) return;
+      // Toggle: if descending, reel; if idle, fire; ignore while reeling/caught
+      if (lureRef.current.isFiring()) {
+        lureRef.current.reel();
+      } else if (!lureRef.current.isMoving()) {
+        lureRef.current.fire();
       }
     };
+
+    const handleKeyDown = (event) => {
+      if (event.code === 'Space') {
+        event.preventDefault(); // Prevent page scrolling
+        handleInput();
+      }
+    };
+
+    const handleTouch = (event) => {
+      event.preventDefault(); // Prevent default touch behavior
+      handleInput();
+    };
+
+    const handleClick = (event) => {
+      event.preventDefault(); // Prevent default click behavior
+      handleInput();
+    };
+
+    // Add all event listeners
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('touchstart', handleTouch);
+    window.addEventListener('click', handleClick);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('touchstart', handleTouch);
+      window.removeEventListener('click', handleClick);
+    };
   }, []);
 
   // Collision detection and catching logic
