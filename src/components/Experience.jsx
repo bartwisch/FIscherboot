@@ -133,7 +133,7 @@ export const Experience = ({ onScoreUpdate }) => {
         target={[20.42, -90.13, -14.11]}
         enablePan={false}
         enableZoom={false}
-        enableRotate={true}
+        enableRotate={false}
       />
     
       
