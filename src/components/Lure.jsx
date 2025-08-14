@@ -22,10 +22,12 @@ const Lure = forwardRef(({ initialPosition = [0, 5, -15], speed = 60, resetDepth
       if (!isFiring && !caughtFish && !isReeling) {
         lureRef.current.position.copy(startPosition);
         // Capture the current pendulum angle at the moment of firing
-        console.log(`Firing with pendulum angle: ${currentPendulumAngle.toFixed(2)} radians (${(currentPendulumAngle * 180 / Math.PI).toFixed(1)} degrees)`);
-        console.log(`X direction: ${Math.cos(currentPendulumAngle).toFixed(2)}`);
+        // Apply the same rotation offset as the visual elements
+        const firingAngle = -Math.PI / 2 + currentPendulumAngle;
+        console.log(`Firing with pendulum angle: ${currentPendulumAngle.toFixed(2)} radians, firing angle: ${firingAngle.toFixed(2)}`);
+        console.log(`X direction: ${Math.cos(firingAngle).toFixed(2)}`);
         const direction = new THREE.Vector3(
-          Math.cos(currentPendulumAngle) * 50, // x component
+          Math.cos(firingAngle) * 50, // x component with correct rotation
           -80, // y component (downward)
           0  // z component - never change z position
         );
@@ -114,9 +116,9 @@ const Lure = forwardRef(({ initialPosition = [0, 5, -15], speed = 60, resetDepth
     if (!isFiring) return;
     
     if (firingDirection) {
-      // Move in the firing direction (x5 speed) - no Z movement
-      lureRef.current.position.x += (firingDirection.x * delta) / 2;
-      lureRef.current.position.y += (firingDirection.y * delta) / 2;
+      // Move in the firing direction (x10 speed) - no Z movement
+      lureRef.current.position.x += (firingDirection.x * delta) / 1;
+      lureRef.current.position.y += (firingDirection.y * delta) / 1;
       // Z position remains constant
 
       // Reset if it goes off-screen without a catch
