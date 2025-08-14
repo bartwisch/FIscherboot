@@ -22,6 +22,8 @@ const Lure = forwardRef(({ initialPosition = [0, 5, -15], speed = 60, resetDepth
       if (!isFiring && !caughtFish && !isReeling) {
         lureRef.current.position.copy(startPosition);
         // Capture the current pendulum angle at the moment of firing
+        console.log(`Firing with pendulum angle: ${currentPendulumAngle.toFixed(2)} radians (${(currentPendulumAngle * 180 / Math.PI).toFixed(1)} degrees)`);
+        console.log(`X direction: ${Math.cos(currentPendulumAngle).toFixed(2)}`);
         const direction = new THREE.Vector3(
           Math.cos(currentPendulumAngle) * 50, // x component
           -80, // y component (downward)
@@ -58,7 +60,12 @@ const Lure = forwardRef(({ initialPosition = [0, 5, -15], speed = 60, resetDepth
       setRotationAngle(prev => prev + delta * 2); // Time for pendulum motion
       const pendulumAngle = Math.sin(rotationAngle) * Math.PI / 3; // Swing between -60 and +60 degrees
       setCurrentPendulumAngle(pendulumAngle); // Store current angle for firing
-      lureRef.current.rotation.z = pendulumAngle;
+      // Don't rotate the group - the lure model will rotate individually
+      
+      // Debug: show angle in console occasionally
+      if (Math.floor(rotationAngle * 10) % 20 === 0) {
+        console.log(`Pendulum angle: ${pendulumAngle.toFixed(2)} rad (${(pendulumAngle * 180 / Math.PI).toFixed(1)}°), cos: ${Math.cos(pendulumAngle).toFixed(2)}`);
+      }
     }
 
     // Handle reeling (with or without a caught fish)
@@ -96,8 +103,9 @@ const Lure = forwardRef(({ initialPosition = [0, 5, -15], speed = 60, resetDepth
         setFishProcessed(false); // Reset flag for next catch
         setFiringDirection(null); // Reset firing direction
         lureRef.current.position.copy(startPosition);
+        // Reset the pendulum angle but don't apply group rotation
         const pendulumAngle = Math.sin(rotationAngle) * Math.PI / 3; // Restore pendulum motion
-        lureRef.current.rotation.z = pendulumAngle;
+        setCurrentPendulumAngle(pendulumAngle);
       }
       return;
     }
@@ -127,12 +135,12 @@ const Lure = forwardRef(({ initialPosition = [0, 5, -15], speed = 60, resetDepth
       <Gltf
         src="/models/lure1.glb"
         scale={10}
-        rotation={[0, 0, -Math.PI / 2]}
+        rotation={[0, 0, -Math.PI / 2 + currentPendulumAngle]}
         castShadow
         receiveShadow
       />
       {/* Direction indicator line - shows where lure is facing */}
-      <group rotation={[0, 0, currentPendulumAngle]}>
+      <group rotation={[0, 0, -Math.PI / 2 + currentPendulumAngle]}>
         <mesh position={[15, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
           <cylinderGeometry args={[0.5, 0.5, 30]} />
           <meshBasicMaterial color="red" />
