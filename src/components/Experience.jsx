@@ -1,14 +1,44 @@
 import { Gltf, OrbitControls, Text } from "@react-three/drei";
-import { useThree } from "@react-three/fiber";
-import { useRef, useEffect } from "react";
+import { useThree, useFrame } from "@react-three/fiber";
+import { useRef, useEffect, useState, useMemo, createRef } from "react";
 
 import FishSpawner from "./FishSpawner";
 import Lure from "./Lure";
 
-export const Experience = () => {
+
+export const Experience = ({ onScoreUpdate }) => {
   const { camera, viewport } = useThree();
   const orbitRef = useRef();
   const lureRef = useRef();
+  const [fishConfigs, setFishConfigs] = useState([]);
+
+  // Generate initial fish configurations
+  useMemo(() => {
+    const configs = [];
+    const fishCount = 5;
+    const baseSpeed = 55;
+    const altitudeRange = { min: -150, max: -30 };
+    const spawnArea = { x: 100, z: -10 };
+
+    for (let i = 0; i < fishCount; i++) {
+      const altitude = altitudeRange.min + Math.random() * (altitudeRange.max - altitudeRange.min);
+      const speedVariation = 0.5 + Math.random();
+      const sizeVariation = 0.8 + Math.random() * 0.4;
+      const depthVariation = (Math.random() - 0.5) * 50;
+      const spawnDelay = Math.random() * 5;
+
+      configs.push({
+        id: `fish_${i}_${Date.now()}`,
+        ref: createRef(),
+        position: [spawnArea.x, altitude, spawnArea.z + depthVariation],
+        speed: baseSpeed * speedVariation,
+        size: sizeVariation,
+        spawnDelay,
+        points: Math.floor(sizeVariation * 100),
+      });
+    }
+    setFishConfigs(configs);
+  }, []);
 
   // Set up the spacebar event listener
   useEffect(() => {
@@ -17,14 +47,36 @@ export const Experience = () => {
         lureRef.current?.fire();
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
-
-    // Cleanup function
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Collision detection and catching logic
+  useFrame(() => {
+    if (!lureRef.current?.isMoving()) return;
+
+    const lurePosition = lureRef.current.getPosition();
+
+    for (const fish of fishConfigs) {
+      if (fish.ref.current) {
+        const fishPosition = fish.ref.current.position;
+        const distance = lurePosition.distanceTo(fishPosition);
+
+        if (distance < 5) { // Collision threshold
+          lureRef.current.startReeling(fish);
+          break; // Catch one fish at a time
+        }
+      }
+    }
+  });
+
+  const handleCatch = (caughtFishId) => {
+    const caughtFish = fishConfigs.find(fish => fish.id === caughtFishId);
+    if (caughtFish) {
+      onScoreUpdate(caughtFish.points);
+    }
+    setFishConfigs(prevConfigs => prevConfigs.filter(fish => fish.id !== caughtFishId));
+  };
 
   return (
     <>
@@ -62,14 +114,8 @@ export const Experience = () => {
       />
       <Gltf src="/models/underwater_skybox.glb" scale={2.5}   />
       <Gltf src="/models/boat1.glb" position={[0, 10, 0]} scale={0.1} castShadow receiveShadow />
-      <FishSpawner 
-        fishCount={5}
-        
-        altitudeRange={{ min: -150, max: -30 }} // Deep underwater
-        spawnArea={{ x: 100, z: -10 }} // Start further away
-        screenWidth={viewport.width} // Use full screen width
-      />
-      <Lure ref={lureRef} initialPosition={[0, 5, 0]} />
+      <FishSpawner fishConfigs={fishConfigs} screenWidth={viewport.width} />
+      <Lure ref={lureRef} initialPosition={[0, 5, 0]} onCatch={handleCatch} />
     </>
   );
 };

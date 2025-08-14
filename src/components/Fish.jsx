@@ -1,10 +1,11 @@
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, forwardRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Gltf } from "@react-three/drei";
 import * as THREE from "three";
 
-export default function Fish({ speed = 3, screenWidth = 40, spawnDelay = 0, ...props }) {
-  const fishRef = useRef();
+const Fish = forwardRef(({ speed = 3, screenWidth = 40, spawnDelay = 0, ...props }, ref) => {
+  // Use the forwarded ref instead of a local one
+  const fishRef = ref;
   // Store the starting position to maintain altitude
   const startPosition = useMemo(() => ({
     x: props.position?.[0] || 0,
@@ -46,13 +47,15 @@ export default function Fish({ speed = 3, screenWidth = 40, spawnDelay = 0, ...p
   });
 
   return (
-    <group ref={fishRef} position={[startPosition.x, startPosition.y, startPosition.z]}>
-      <Gltf 
-        src="/models/fish1.glb" 
+    <group ref={fishRef} {...props}>
+      <Gltf
+        src="/models/fish1.glb"
         scale={6}
-        castShadow 
+        castShadow
         receiveShadow
       />
     </group>
   );
-}
+});
+
+export default Fish;

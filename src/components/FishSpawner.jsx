@@ -11,60 +11,26 @@ import Fish from "./Fish";
  * - Easy to extend for game mechanics (catching, scoring, etc.)
  */
 export default function FishSpawner({ 
-  fishCount = 5,
-  baseSpeed = 55, // 5x faster than original (3 * 5 = 15)
-  altitudeRange = { min: -150, max: -30 }, // Well below boat (y=10) to bottom of screen
-  spawnArea = { x: 0, z: 0 },
-  screenWidth = 800,
-  fishTypes = ["fish1"], // Can be extended for different fish models
+  fishConfigs = [], 
+  screenWidth, 
   ...props 
 }) {
   
-  // Generate fish configurations
-  const fishConfigs = useMemo(() => {
-    const configs = [];
-    
-    for (let i = 0; i < fishCount; i++) {
-      // Distribute fish across different altitudes
-      const altitudeStep = (altitudeRange.max - altitudeRange.min) / (fishCount - 1);
-      const altitude = altitudeRange.min + (altitudeStep * i);
-      
-      // Add some randomness to spawn timing and positioning
-      const spawnDelay = Math.random() * 5; // 0-5 second delay
-      const speedVariation = 0.8 + Math.random() * 0.4; // 80%-120% of base speed
-      const zOffset = (Math.random() - 0.5) * 20; // Random depth variation
-      
-      configs.push({
-        id: `fish-${i}`,
-        position: [spawnArea.x, altitude, spawnArea.z + zOffset],
-        speed: baseSpeed * speedVariation,
-        spawnDelay,
-        fishType: fishTypes[i % fishTypes.length],
-        // Add fish-specific properties for game mechanics
-        size: 0.8 + Math.random() * 0.4, // Random size variation
-        points: Math.floor(Math.random() * 50) + 10, // Point value for catching
-      });
-    }
-    
-    return configs;
-  }, [fishCount, baseSpeed, altitudeRange, spawnArea, fishTypes]);
-
   return (
-    <group name="fish-spawner" {...props}>
+    <group {...props}>
       {fishConfigs.map((config) => (
         <Fish
+          ref={config.ref} // Pass the ref to the Fish component
           key={config.id}
           position={config.position}
           speed={config.speed}
           screenWidth={screenWidth}
           spawnDelay={config.spawnDelay}
-          scale={config.size * 6} // Apply size variation to the base scale
+          scale={config.size * 6}
           userData={{
-            // Store game-related data that can be accessed for catching mechanics
             fishId: config.id,
             points: config.points,
             fishType: config.fishType,
-            spawnTime: Date.now() + (config.spawnDelay * 1000),
           }}
         />
       ))}
