@@ -134,27 +134,26 @@ const Lure = forwardRef(({ initialPosition = [0, 5, -15], speed = 60, resetDepth
 
   return (
     <group ref={lureRef} position={startPosition}>
-      <Gltf
-        src="/models/lure1.glb"
-        scale={10}
-        rotation={[0, 0, -Math.PI / 2 + currentPendulumAngle]}
-        castShadow
-        receiveShadow
-      />
-      {/* Direction indicator line - shows where lure is facing */}
-      <group rotation={[0, 0, -Math.PI / 2 + currentPendulumAngle]}>
-        <mesh position={[15, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
-          <cylinderGeometry args={[0.5, 0.5, 30]} />
-          <meshBasicMaterial color="red" />
-        </mesh>
+      {/* Pivot point (attachment point) */}
+      <group rotation={[0, 0, currentPendulumAngle]}>
+        {/* Lure hangs down from the pivot point */}
+        <Gltf
+          src="/models/lure1.glb"
+          scale={10}
+          position={[0, -8, 0]} // Offset downward from pivot
+          rotation={[0, 0, -Math.PI / 2]}
+          castShadow
+          receiveShadow
+        />
+        {/* Light source attached to the lure */}
+        <pointLight 
+          position={[0, -8, 0]}
+          color="aqua" 
+          intensity={isFiring || caughtFish || isReeling ? 15 : 0} 
+          distance={20} 
+          decay={2} 
+        />
       </group>
-      {/* Add a light source to the lure */}
-      <pointLight 
-        color="aqua" 
-        intensity={isFiring || caughtFish || isReeling ? 15 : 0} 
-        distance={20} 
-        decay={2} 
-      />
     </group>
   );
 });
