@@ -134,11 +134,26 @@ const Lure = forwardRef(({ initialPosition = [0, 5, -15], speed = 60, resetDepth
     }
   });
 
+  // Calculate rotation based on state
+  const getRotation = () => {
+    if (isFiring && firingDirection) {
+      // When firing, rotate the lure to point in the direction of movement
+      const angle = Math.atan2(firingDirection.y, firingDirection.x);
+      return [0, 0, angle + Math.PI / 2]; // Flip direction so tip points forward
+    } else if (isReeling) {
+      // When reeling, point upward toward the boat
+      return [0, 0, -Math.PI / 2]; // Point upward
+    } else {
+      // When idle, use pendulum motion
+      return [0, 0, currentPendulumAngle];
+    }
+  };
+
   return (
     <group ref={lureRef} position={startPosition}>
       
       {/* Pivot point (attachment point) */}
-      <group rotation={[0, 0, currentPendulumAngle]}>
+      <group rotation={getRotation()}>
         {/* Lure hangs down from the pivot point */}
         <Gltf
           src="/models/lure1.glb"
