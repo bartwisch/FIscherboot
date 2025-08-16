@@ -125,7 +125,7 @@ const Lure = forwardRef(({ initialPosition = [0, 5, -15], speed = 60, resetDepth
 
       // Reset if it goes off-screen without a catch
       if (lureRef.current.position.y < resetDepth || 
-          Math.abs(lureRef.current.position.x - startPosition.x) > 100) {
+          Math.abs(lureRef.current.position.x - startPosition.x) > 300) {
         setIsFiring(false);
         setFiringDirection(null);
         // Begin auto-retrieval when reaching boundaries
