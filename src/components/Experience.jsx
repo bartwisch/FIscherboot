@@ -4,6 +4,7 @@ import { useRef, useEffect, useState, useMemo, createRef } from "react";
 import * as THREE from 'three';
 
 import FishSpawner from "./FishSpawner";
+import YellowfishSpawner from "./YellowfishSpawner";
 import Lure from "./Lure";
 
 
@@ -12,6 +13,7 @@ export const Experience = ({ onScoreUpdate }) => {
   const orbitRef = useRef();
   const lureRef = useRef();
   const [fishConfigs, setFishConfigs] = useState([]);
+  const [yellowfishConfigs, setYellowfishConfigs] = useState([]);
   const boatPosition = useMemo(() => new THREE.Vector3(0, 10, 0), []);
 
   // Generate initial fish configurations
@@ -39,6 +41,32 @@ export const Experience = ({ onScoreUpdate }) => {
       });
     }
     setFishConfigs(configs);
+  }, []);
+
+  // Generate yellowfish configurations (swimming under the boat)
+  useMemo(() => {
+    const yellowConfigs = [];
+    const yellowfishCount = 5;
+    const baseSpeed = 40;
+    const altitudeRange = { min: -25, max: -5 }; // Just under the boat
+    const spawnArea = { x: 80, z: 0 };
+
+    for (let i = 0; i < yellowfishCount; i++) {
+      const altitude = altitudeRange.min + Math.random() * (altitudeRange.max - altitudeRange.min);
+      const speedVariation = 0.6 + Math.random() * 0.8;
+      const sizeVariation = 0.15 + Math.random() * 0.1;
+      const spawnDelay = Math.random() * 4;
+
+      yellowConfigs.push({
+        id: `yellowfish_${i}_${Date.now()}`,
+        ref: createRef(),
+        position: [spawnArea.x, altitude, spawnArea.z],
+        speed: baseSpeed * speedVariation,
+        size: sizeVariation,
+        spawnDelay,
+      });
+    }
+    setYellowfishConfigs(yellowConfigs);
   }, []);
 
   // Set up the spacebar and touch event listeners
@@ -131,30 +159,78 @@ export const Experience = ({ onScoreUpdate }) => {
         break; // Catch one fish at a time
       }
     }
+
+    // Check collisions with yellowfish
+    for (const yellowfish of yellowfishConfigs) {
+      // Check if yellowfish ref is valid
+      if (!yellowfish.ref?.current) {
+        continue;
+      }
+      
+      const fishPosition = yellowfish.ref.current.position;
+      
+      // Early exit if fish is too far away to avoid expensive distance calculations
+      const roughDistanceX = Math.abs(lurePosition.x - fishPosition.x);
+      const roughDistanceY = Math.abs(lurePosition.y - fishPosition.y);
+      if (roughDistanceX > 20 || roughDistanceY > 20) {
+        continue; // Skip expensive distance calculation if roughly too far
+      }
+      
+      const distance = lurePosition.distanceTo(fishPosition);
+
+      // Only check collision threshold
+      if (distance < 25) {
+        const distanceFromBoat = boatPosition.distanceTo(fishPosition);
+        console.log(`Yellowfish ${yellowfish.id} caught! Distance from boat: ${distanceFromBoat.toFixed(2)}`);
+        
+        // Create a fish object to pass to the lure
+        const caughtFishObj = {
+          id: yellowfish.id,
+          ref: yellowfish.ref,
+          type: 'yellowfish'
+        };
+        // Start reeling with the fish attached
+        lureRef.current.startReeling(caughtFishObj, distanceFromBoat);
+        break; // Catch one fish at a time
+      }
+    }
   });
 
   const handleCatch = (caughtFishId, distance) => {
     console.log(`========== FISH CAUGHT ==========`);
     console.log(`Caught fish ${caughtFishId} at distance ${distance.toFixed(2)}. Removing it.`);
-    console.log(`Fish configs before removal: ${fishConfigs.length}`);
-    console.log(`Fish configs IDs before:`, fishConfigs.map(f => f.id));
     
-    // Scoring: 10-30 points based on distance.
-    const maxDistance = 250; // Approximate max distance a fish can be caught at
-    const score = 10 + (distance / maxDistance) * 20;
-    const finalScore = Math.max(10, Math.min(30, Math.round(score)));
-    console.log(`Awarding ${finalScore} points.`);
+    // Check if it's a goldfish or yellowfish
+    const isGoldfish = fishConfigs.some(fish => fish.id === caughtFishId);
+    const isYellowfish = yellowfishConfigs.some(fish => fish.id === caughtFishId);
+    
+    // Scoring: Different points for different fish types
+    const maxDistance = 250;
+    let baseScore = 10;
+    if (isYellowfish) {
+      baseScore = 20; // Yellowfish are worth more points
+    }
+    const score = baseScore + (distance / maxDistance) * 15;
+    const finalScore = Math.max(baseScore, Math.min(baseScore + 15, Math.round(score)));
+    console.log(`Awarding ${finalScore} points for ${isYellowfish ? 'yellowfish' : 'goldfish'}.`);
     onScoreUpdate(finalScore);
     
-    setFishConfigs((prevConfigs) => {
-      const newConfigs = prevConfigs.filter((fish) => fish.id !== caughtFishId);
-      console.log(`Fish configs after removal: ${newConfigs.length}`);
-      console.log(`Fish configs IDs after:`, newConfigs.map(f => f.id));
-      console.log(`================================`);
-      return newConfigs;
-    });
-    // Note: We are not spawning a new fish here to simplify the logic for now.
-    // We can add that back later if needed.
+    if (isGoldfish) {
+      console.log(`Goldfish configs before removal: ${fishConfigs.length}`);
+      setFishConfigs((prevConfigs) => {
+        const newConfigs = prevConfigs.filter((fish) => fish.id !== caughtFishId);
+        console.log(`Goldfish configs after removal: ${newConfigs.length}`);
+        return newConfigs;
+      });
+    } else if (isYellowfish) {
+      console.log(`Yellowfish configs before removal: ${yellowfishConfigs.length}`);
+      setYellowfishConfigs((prevConfigs) => {
+        const newConfigs = prevConfigs.filter((fish) => fish.id !== caughtFishId);
+        console.log(`Yellowfish configs after removal: ${newConfigs.length}`);
+        return newConfigs;
+      });
+    }
+    console.log(`================================`);
   };
 
   return (
@@ -201,9 +277,10 @@ export const Experience = ({ onScoreUpdate }) => {
       </mesh>
       
       <Gltf src="/models/underwater_skybox.glb" scale={2.5}   />
-      <Gltf src="/models/boat1.glb" position={[0, 10, 0]} scale={0.1} castShadow receiveShadow />
+      <Gltf src="/models/boat1.glb" position={[0, 10, 0]} scale={0.1} castShadow receiveShadow animations={[]} />
       <FishSpawner fishConfigs={fishConfigs} screenWidth={viewport.width} />
-      <Lure ref={lureRef} initialPosition={[0, 5, -15]} onCatch={handleCatch} fishConfigs={fishConfigs} />
+      <YellowfishSpawner yellowfishConfigs={yellowfishConfigs} screenWidth={viewport.width} />
+      <Lure ref={lureRef} initialPosition={[0, 5, -15]} onCatch={handleCatch} fishConfigs={fishConfigs} yellowfishConfigs={yellowfishConfigs} />
     </>
   );
 };

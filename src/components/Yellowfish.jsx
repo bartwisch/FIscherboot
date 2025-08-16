@@ -1,24 +1,20 @@
 import { useRef, useMemo, forwardRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Gltf, Text } from "@react-three/drei";
-import * as THREE from "three";
+import { Gltf } from "@react-three/drei";
 
-const Fish = forwardRef(({ speed = 3, screenWidth = 40, spawnDelay = 0, ...props }, ref) => {
-  // Use the forwarded ref instead of a local one
+const Yellowfish = forwardRef(({ speed = 3, screenWidth = 40, spawnDelay = 0, ...props }, ref) => {
   const fishRef = ref;
-  // Store the starting position to maintain altitude
   const startPosition = useMemo(() => ({
     x: props.position?.[0] || 0,
     y: props.position?.[1] || 0,
     z: props.position?.[2] || 0
   }), [props.position]);
 
-  // Get fish ID for logging
   const fishId = props.userData?.fishId || 'unknown';
 
-    useFrame(({ clock }) => {
+  useFrame(({ clock }) => {
     if (!fishRef.current) {
-      console.log(`Fish ${fishId}: fishRef.current is null, skipping frame`);
+      console.log(`Yellowfish ${fishId}: fishRef.current is null, skipping frame`);
       return;
     }
 
@@ -26,12 +22,12 @@ const Fish = forwardRef(({ speed = 3, screenWidth = 40, spawnDelay = 0, ...props
 
     // Wait for the spawn delay before starting the animation
     if (elapsedTime < spawnDelay) {
-      fishRef.current.visible = false; // Keep fish hidden until it's time to spawn
+      fishRef.current.visible = false;
       return;
     }
     
     if (!fishRef.current.visible) {
-      console.log(`Fish ${fishId}: Now visible, starting animation at time ${elapsedTime}`);
+      console.log(`Yellowfish ${fishId}: Now visible, starting animation at time ${elapsedTime}`);
     }
     fishRef.current.visible = true;
 
@@ -42,36 +38,41 @@ const Fish = forwardRef(({ speed = 3, screenWidth = 40, spawnDelay = 0, ...props
     const travelDistance = screenWidth + 10;
     
     // Start position is just off the right side of the screen, relative to the spawn center
-    const startX = startPosition.x + screenWidth / 2 + 5; // `+5` is a small buffer
+    const startX = startPosition.x + screenWidth / 2 + 5;
 
     // Calculate the new X position, moving from right to left
-    // Simple linear movement that loops smoothly
     const distanceTraveled = (animationTime * speed) % travelDistance;
     const currentX = startX - distanceTraveled;
-    
-    // Removed excessive logging - fish movement is working fine
 
     // Update the fish's position while maintaining its altitude and depth
     fishRef.current.position.set(currentX, startPosition.y, startPosition.z);
 
-    // Ensure the fish is facing forward in swimming direction (goldfish model needs rotation)
-    fishRef.current.rotation.y = -Math.PI / 2;
+    // Ensure the fish is facing forward in swimming direction
+    fishRef.current.rotation.y = 0;
     
     // Force update the matrix to ensure rendering updates
     fishRef.current.updateMatrixWorld(true);
-    
   });
 
   return (
     <group ref={fishRef} {...props}>
       <Gltf
-        src="/models/goldfish.glb"
-        scale={.1}
+        src="/models/gelbfisch.glb"
+        scale={props.scale || 1}
         castShadow
         receiveShadow
+        animations={[]}
+      />
+      {/* Light source for yellowfish */}
+      <pointLight 
+        position={[0, 0, 0]}
+        color="yellow" 
+        intensity={2} 
+        distance={12} 
+        decay={2} 
       />
     </group>
   );
 });
 
-export default Fish;
+export default Yellowfish;
