@@ -1,6 +1,7 @@
 import { Gltf, OrbitControls, Text } from "@react-three/drei";
 import { useThree, useFrame } from "@react-three/fiber";
 import { useRef, useEffect, useState, useMemo, createRef } from "react";
+import * as THREE from 'three';
 
 import FishSpawner from "./FishSpawner";
 import Lure from "./Lure";
@@ -11,6 +12,7 @@ export const Experience = ({ onScoreUpdate }) => {
   const orbitRef = useRef();
   const lureRef = useRef();
   const [fishConfigs, setFishConfigs] = useState([]);
+  const boatPosition = useMemo(() => new THREE.Vector3(0, 10, 0), []);
 
   // Generate initial fish configurations
   useMemo(() => {
@@ -116,27 +118,33 @@ export const Experience = ({ onScoreUpdate }) => {
 
       // Only check collision threshold
       if (distance < 25) {
-        console.log(`Fish ${fish.id} caught! Distance: ${distance.toFixed(2)}`);
+        const distanceFromBoat = boatPosition.distanceTo(fishPosition);
+        console.log(`Fish ${fish.id} caught! Distance from boat: ${distanceFromBoat.toFixed(2)}`);
+        
         // Create a fish object to pass to the lure
         const caughtFishObj = {
           id: fish.id,
           ref: fish.ref
         };
         // Start reeling with the fish attached
-        lureRef.current.startReeling(caughtFishObj);
+        lureRef.current.startReeling(caughtFishObj, distanceFromBoat);
         break; // Catch one fish at a time
       }
     }
   });
 
-  const handleCatch = (caughtFishId) => {
+  const handleCatch = (caughtFishId, distance) => {
     console.log(`========== FISH CAUGHT ==========`);
-    console.log(`Caught fish ${caughtFishId}. Removing it.`);
+    console.log(`Caught fish ${caughtFishId} at distance ${distance.toFixed(2)}. Removing it.`);
     console.log(`Fish configs before removal: ${fishConfigs.length}`);
     console.log(`Fish configs IDs before:`, fishConfigs.map(f => f.id));
     
-    // Award 10 points for each goldfish caught
-    onScoreUpdate(10);
+    // Scoring: 10-30 points based on distance.
+    const maxDistance = 250; // Approximate max distance a fish can be caught at
+    const score = 10 + (distance / maxDistance) * 20;
+    const finalScore = Math.max(10, Math.min(30, Math.round(score)));
+    console.log(`Awarding ${finalScore} points.`);
+    onScoreUpdate(finalScore);
     
     setFishConfigs((prevConfigs) => {
       const newConfigs = prevConfigs.filter((fish) => fish.id !== caughtFishId);

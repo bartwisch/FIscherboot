@@ -12,6 +12,7 @@ const Lure = forwardRef(({ initialPosition = [0, 5, -15], speed = 60, resetDepth
   const [rotationAngle, setRotationAngle] = useState(0);
   const [firingDirection, setFiringDirection] = useState(null);
   const [currentPendulumAngle, setCurrentPendulumAngle] = useState(0);
+  const [catchDistance, setCatchDistance] = useState(0);
 
   // Memoize the starting position to avoid re-calculations
   const startPosition = useMemo(() => new THREE.Vector3(...initialPosition), [initialPosition]);
@@ -41,9 +42,10 @@ const Lure = forwardRef(({ initialPosition = [0, 5, -15], speed = 60, resetDepth
     isMoving: () => isFiring || !!caughtFish || isReeling,
     getPosition: () => lureRef.current?.position || new THREE.Vector3(0, 0, 0),
     // Start reeling due to a caught fish
-    startReeling: (fish) => {
+    startReeling: (fish, distance) => {
       setIsFiring(false);
       setCaughtFish(fish);
+      setCatchDistance(distance);
       setIsReeling(true);
       setFishProcessed(false); // Reset flag when catching a fish
     },
@@ -97,7 +99,7 @@ const Lure = forwardRef(({ initialPosition = [0, 5, -15], speed = 60, resetDepth
         console.log("Lure reached boat, resetting");
         if (caughtFish && !fishProcessed) {
           console.log(`Calling onCatch for fish ${caughtFish.id}`);
-          onCatch(caughtFish.id); // Notify parent to remove the fish
+          onCatch(caughtFish.id, catchDistance); // Notify parent to remove the fish
           setFishProcessed(true); // Mark fish as processed to prevent duplicate calls
         }
         setCaughtFish(null);
