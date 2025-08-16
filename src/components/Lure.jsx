@@ -29,7 +29,7 @@ const Lure = forwardRef(({ initialPosition = [0, 5, -15], speed = 60, resetDepth
         console.log(`X direction: ${Math.cos(firingAngle).toFixed(2)}`);
         const direction = new THREE.Vector3(
           Math.cos(firingAngle) * 50, // x component with correct rotation
-          -80, // y component (downward)
+          Math.sin(firingAngle) * 50, // y component based on angle
           0  // z component - never change z position
         );
         setFiringDirection(direction);
@@ -118,9 +118,9 @@ const Lure = forwardRef(({ initialPosition = [0, 5, -15], speed = 60, resetDepth
     if (!isFiring) return;
     
     if (firingDirection) {
-      // Move in the firing direction (x10 speed) - no Z movement
-      lureRef.current.position.x += (firingDirection.x * delta) / 1;
-      lureRef.current.position.y += (firingDirection.y * delta) / 1;
+      // Move in the firing direction (2.5x speed) - no Z movement
+      lureRef.current.position.x += (firingDirection.x * delta) * 2.5;
+      lureRef.current.position.y += (firingDirection.y * delta) * 2.5;
       // Z position remains constant
 
       // Reset if it goes off-screen without a catch
